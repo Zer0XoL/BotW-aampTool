@@ -246,14 +246,14 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 		{
 			addr = -addr;
 			write_uint16(((int)output.tellg() + 8 - addr) / 4, addr);	//write the offset to parent root
+		}
 
-			//write root pointers that point to the same thing:
-			if (pointer_table.find(elem->IntAttribute("address", 0)) != pointer_table.end())
+		//write root pointers that point to the same thing:
+		if (pointer_table.find(elem->IntAttribute("address", 0)) != pointer_table.end())
+		{
+			for (auto p : pointer_table[(elem->IntAttribute("address", 0))])
 			{
-				for (auto p : pointer_table[(elem->IntAttribute("address", 0))])
-				{
-					write_uint16(((int)output.tellg() + 8 - p) / 4, p);	//write the offset to parent root
-				}
+				write_uint16(((int)output.tellg() + 8 - p) / 4, p);	//write the offset to parent root
 			}
 		}
 
@@ -269,6 +269,8 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				write_uint32(hash);
 			}
 			int data_offset_address = output.tellg();
+			cout << "child offset: " << data_offset_address << std::endl;
+			
 
 			write_uint16(0);	//write offset, write later from child or data/string buffer
 			uint8_t children = elem->IntAttribute("children", 0);
@@ -280,6 +282,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 			}
 			else
 			{
+				cout << "child type: " << elem->Attribute("type") << std::endl;
 				float f;
 				stringstream vectorstring;
 				string token;
@@ -291,7 +294,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 					cout << "allocated bool: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Int:
-					allocate_data({ (uint32_t)(std::stoi(elem->GetText())) }, data_offset_address);
+					allocate_data({ (uint32_t)(std::strtoul(elem->GetText(), NULL, 0)) }, data_offset_address);
 					cout << "allocated int: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Float:
@@ -324,7 +327,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 					break;
 				default:
 					//getType(elem->Attribute("type"))
-					allocate_data({ (uint32_t)(std::stoi(elem->GetText())) }, data_offset_address);
+					allocate_data({ (uint32_t)(std::strtoul(elem->GetText(), NULL, 0)) }, data_offset_address);
 					cout << "allocated unknown type "<< getType(elem->Attribute("type")) <<": " << elem->GetText() << std::endl;
 					break;
 				}
