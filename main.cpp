@@ -44,9 +44,6 @@ ifstream file;
 int rootnodes;
 int root_address;
 
-char* data_buffer;
-char* string_buffer;
-
 void read_root_node();
 void read_child_node(XMLElement *root, int level=0);
 
@@ -113,11 +110,9 @@ int main(int argc, char* argv[])
 
 	file.read((char*)&data.uint32, 4);	//Data buffer size
 	cout << "Data buffer size:  " << data.uint32 << std::endl;
-	data_buffer = new char[data.uint32];
 
 	file.read((char*)&data.uint32, 4);	//String buffer size
 	cout << "String buffer size:  " << data.uint32 << std::endl;
-	string_buffer = new char[data.uint32];
 
 	file.read((char*)&data.uint32, 4);	//unknown 0
 	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
@@ -295,7 +290,6 @@ void read_child_node(XMLElement *parent, int level)
 			temp_string = "";
 			file >> temp_string;
 			newElement->SetText(temp_string.c_str());
-			cout << lv << "Data: " << string_buffer << ", Position: " << std::hex << "0x" << position << std::dec << std::endl;
 			break;
 		case DataType::Path:
 			newElement->SetAttribute("type", "path");

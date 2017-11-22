@@ -224,6 +224,7 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 
 void write_children(vector<pair<int, XMLElement*>> nodes)
 {
+	//sorts the nodes, makes the order the same as the original, but causes the data allocation order to be different:
 	std::sort(nodes.begin(), nodes.end(), [](auto a, auto b) {
 		if (a.second->IntAttribute("address", 0) < b.second->IntAttribute("address", 0))
 			return true;
@@ -332,17 +333,28 @@ void to_aamp(string filename)
 	vector<XMLElement*> collected_roots;
 	XMLElement* r = xmlDoc.FirstChildElement();
 	int number_roots = 0;
+	int number_directchildren = 0;
 	do
 	{
 		collected_roots.push_back(r);
 		number_roots++;
+		number_directchildren += r->IntAttribute("children", 0);
 	} while (r = r->NextSiblingElement());
-	write_uint32(number_roots, 24);
+	write_uint32(number_roots, 24);	//write root node count
+	write_uint32(number_directchildren, 28);	//write direct child count
 
 	auto children = write_roots(collected_roots);
 
 	write_children(children);
-	write_databuffer();
-	write_stringbuffer();
+	int databuffer_size = write_databuffer();
+	int stringbuffer_size = write_stringbuffer();
+	output.seekg(0, output.end);
+	int filesize = output.tellg();
+	write_uint32(filesize, 12);	//write filesize
+
+	int number_extrachildren = (((((filesize - number_roots * 12) - number_directchildren * 8) - databuffer_size) - stringbuffer_size)-52) / 8;
+	
+	write_uint32(number_extrachildren, 32);	//write extra child count
+
 	output.close();
 }
