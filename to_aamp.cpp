@@ -4,6 +4,8 @@
 #include <map>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
+#include <iostream>
 #include "crc32.h"
 #include "tinyxml2.h"
 
@@ -222,6 +224,11 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 
 void write_children(vector<pair<int, XMLElement*>> nodes)
 {
+	std::sort(nodes.begin(), nodes.end(), [](auto a, auto b) {
+		if (a.second->IntAttribute("address", 0) < b.second->IntAttribute("address", 0))
+			return true;
+		return false;
+	});
 	vector<pair<int, XMLElement*>> collected_children;
 	for (auto n : nodes)
 	{
@@ -238,6 +245,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 
 		do
 		{
+			cout << "writing child: " << string(elem->Name()) << std::endl;
 			if (string(elem->Name()) == "node")
 				write_uint32(elem->IntAttribute("hash"));
 			else	//get the crc32 hash from the name
@@ -259,6 +267,9 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 			else
 			{
 				float f;
+				stringstream vectorstring;
+				string token;
+				vector<uint32_t> uints;
 				switch (getType(elem->Attribute("type")))
 				{
 				case DataType::Bool:
@@ -272,19 +283,30 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				case DataType::Float:
 					f = std::stof(elem->GetText());
 					allocate_data({ *reinterpret_cast<uint32_t*>(&f) }, data_offset_address);
-					//allocate_data({ 100 }, data_offset_address);
 					cout << "allocated float: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Vector2:
 				case DataType::Vector3:
 				case DataType::Vector4:
-					//skit i det atm
+					vectorstring = stringstream(string(elem->GetText()));
+					cout << "vector: ";
+					while (std::getline(vectorstring, token, ','))
+					{
+						cout << token <<" ,";
+						f = std::stof(token);
+						uints.push_back(*reinterpret_cast<uint32_t*>(&f));
+					}
+					cout << std::endl;
+					allocate_data(uints, data_offset_address);
 					break;
 				case DataType::String:
 				case DataType::String2:
 				case DataType::Actor:
 				case DataType::Path:
-					allocate_string(elem->GetText(), data_offset_address);
+					if(elem->GetText())
+						allocate_string(elem->GetText(), data_offset_address);
+					else
+						allocate_string("", data_offset_address);
 					break;
 				default:
 					//getType(elem->Attribute("type"))
@@ -297,11 +319,6 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 
 		} while (elem = elem->NextSiblingElement());
 	}
-	std::sort(collected_children.begin(), collected_children.end(), [](auto a, auto b) {
-		if (a.second->IntAttribute("address", 0) < b.second->IntAttribute("address", 0))
-			return true;
-		return false;
-	});
 	if(collected_children.size() > 0)
 		write_children(collected_children);
 }
@@ -323,12 +340,6 @@ void to_aamp(string filename)
 	write_uint32(number_roots, 24);
 
 	auto children = write_roots(collected_roots);
-
-	std::sort(children.begin(), children.end(), [](auto a, auto b) {
-		if (a.second->IntAttribute("address", 0) < b.second->IntAttribute("address", 0))
-			return true;
-		return false;
-	});
 
 	write_children(children);
 	write_databuffer();
