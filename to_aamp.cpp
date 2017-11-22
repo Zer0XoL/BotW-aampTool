@@ -40,6 +40,7 @@ fstream output;
 
 map<string, vector<int>> string_buffer;	//vector holds offsets to write
 vector < pair<uint32_t, vector<int> > > data_buffer;
+map<int, vector<int>> pointer_table;	//used to restore the original structure
 
 void write_uint32(uint32_t data, int location = -1)
 {
@@ -204,7 +205,7 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 		}
 		write_uint32(r->IntAttribute("extra",0));	//write the unknown extra value
 
-		int data_offset_address = -(int)output.tellg();	//store the address for child nodes to write to
+		int data_offset_address = -(int)output.tellg();	//store the address for child nodes to write to Negative
 
 		write_uint16(1337);	//write data offset, write later from child node
 
@@ -212,11 +213,14 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 
 		write_uint16(children);	//write number of child nodes
 
-		//do the pointer table thing here
 
 		if (children > 0)
 		{
 			collected_children.push_back({data_offset_address, r->FirstChildElement()});
+		}
+		else //do the pointer table thing here
+		{
+			pointer_table[r->IntAttribute("pointer", 0)].push_back(-data_offset_address);
 		}
 	}
 	return collected_children;
@@ -242,6 +246,15 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 		{
 			addr = -addr;
 			write_uint16(((int)output.tellg() + 8 - addr) / 4, addr);	//write the offset to parent root
+
+			//write root pointers that point to the same thing:
+			if (pointer_table.find(elem->IntAttribute("address", 0)) != pointer_table.end())
+			{
+				for (auto p : pointer_table[(elem->IntAttribute("address", 0))])
+				{
+					write_uint16(((int)output.tellg() + 8 - p) / 4, p);	//write the offset to parent root
+				}
+			}
 		}
 
 		do
