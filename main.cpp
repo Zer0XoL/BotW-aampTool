@@ -47,6 +47,8 @@ int root_address;
 void read_root_node();
 void read_child_node(XMLElement *root, int level=0);
 
+void to_xml(string filename);
+
 int main(int argc, char* argv[])
 {
 	string program_path(argv[0]);
@@ -54,39 +56,52 @@ int main(int argc, char* argv[])
 
 	init_crc2(program_path+"hashed_names.txt");
 
-	if (argc != 2)
+	if (argc < 1)
 	{
-		std::cerr << "Takes file as argument.\n";
+		std::cerr << "Takes file(s) as argument.\n";
 		return 1;
 	}
-	file = ifstream(argv[1], ifstream::binary);
+
+	for (int i = 1; i < argc; ++i)
+	{
+		string filename = argv[i];
+		cout << filename << std::endl;
+		to_xml(filename);
+	}
+	cin.get();
+	return 0;
+}
+
+void to_xml(string filename)
+{
+	file = ifstream(filename, ifstream::binary);
 	if (!file.is_open())
 	{
 		std::cerr << "Could not open file.\n";
-		return 1;
+		return;
 	}
 
 	file.seekg(0, file.end);
 	int length = file.tellg();
 	file.seekg(0, file.beg);
 	cout << length << std::endl;
-	
+
 	file.read((char*)&data.uint32, 4);	//AAMP header
-	cout << "header: "<<data.chars <<std::endl;
+	cout << "header: " << data.chars << std::endl;
 	if (data.chars[0] != 'A')
 	{
 		file.close();
 		//write aamp instead
-		to_aamp(argv[1]);
-		cin.get();
-		exit(0);
+		to_aamp(filename);
+		//cin.get();
+		return;
 	}
 
 	file.read((char*)&data.uint32, 4);	//version
 	cout << "version: " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//unknown 3
-	cout << "unknown: " <<std::hex << "0x" << data.uint32 <<std::dec << std::endl;
+	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//version
 	cout << "filesize: " << data.uint32 << ", real filesize: " << length << std::endl;
@@ -128,9 +143,8 @@ int main(int argc, char* argv[])
 	read_root_node();
 
 	file.close();
-	XMLError eResult = xmlDoc.SaveFile(string(string(argv[1]) + ".xml").c_str());
-	cin.get();
-	return 0;
+	XMLError eResult = xmlDoc.SaveFile(string(string(filename) + ".xml").c_str());
+	//cin.get();
 }
 
 void read_root_node()

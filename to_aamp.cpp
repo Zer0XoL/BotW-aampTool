@@ -229,11 +229,11 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 void write_children(vector<pair<int, XMLElement*>> nodes)
 {
 	//sorts the nodes, makes the order the same as the original, but causes the data allocation order to be different:
-	std::sort(nodes.begin(), nodes.end(), [](auto a, auto b) {
+	/*std::sort(nodes.begin(), nodes.end(), [](auto a, auto b) {
 		if (a.second->IntAttribute("address", 0) < b.second->IntAttribute("address", 0))
 			return true;
 		return false;
-	});
+	});*/
 	vector<pair<int, XMLElement*>> collected_children;
 	for (auto n : nodes)
 	{
@@ -342,7 +342,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 
 void to_aamp(string filename)
 {
-	output = fstream(filename + ".aamp", ios::out | ios::binary);	//open target file for writing
+	output = fstream(filename.substr(0,filename.size()-4) + ".aamp", ios::out | ios::binary);	//open target file for writing
 	XMLDocument xmlDoc;
 	xmlDoc.LoadFile(filename.c_str());	//open xml for reading
 	prewrite_header();	//prewrite the header
