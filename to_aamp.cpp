@@ -80,7 +80,7 @@ void write_string(string data, int location = -1)
 	for (auto c : data)
 	{
 		output.write((char*)&c, sizeof(uint8_t));
-		cout << "wrote char: " << c << std::endl;
+		//cout << "wrote char: " << c << std::endl;
 	}
 	if (location != -1)
 		output.seekg(current);
@@ -143,7 +143,7 @@ int write_databuffer()
 			write_uint16(((int)output.tellg() + 4 - addr) / 4, addr);
 		write_uint32(p.first);
 		total += 4;
-		cout << "wrote data: " << p.first << std::endl;
+		//cout << "wrote data: " << p.first << std::endl;
 	}
 	//36
 	write_uint32(total, 36);
@@ -178,7 +178,7 @@ int write_stringbuffer()
 		}
 		write_string(thing.first.c_str());
 		total += thing.first.length();
-		cout << "wrote string: " << thing.first << std::endl;
+		//cout << "wrote string: " << thing.first << std::endl;
 		do
 		{
 			write_byte(0);
@@ -259,7 +259,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 
 		do
 		{
-			cout << "writing child: " << string(elem->Name()) << std::endl;
+			//cout << "writing child: " << string(elem->Name()) << std::endl;
 			if (string(elem->Name()) == "node")
 				write_uint32(elem->IntAttribute("hash"));
 			else	//get the crc32 hash from the name
@@ -269,7 +269,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				write_uint32(hash);
 			}
 			int data_offset_address = output.tellg();
-			cout << "child offset: " << data_offset_address << std::endl;
+			//cout << "child offset: " << data_offset_address << std::endl;
 			
 
 			write_uint16(0);	//write offset, write later from child or data/string buffer
@@ -282,7 +282,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 			}
 			else
 			{
-				cout << "child type: " << elem->Attribute("type") << std::endl;
+				//cout << "child type: " << elem->Attribute("type") << std::endl;
 				float f;
 				stringstream vectorstring;
 				string token;
@@ -291,29 +291,29 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				{
 				case DataType::Bool:
 					allocate_data({ (uint32_t)(string(elem->GetText()) == "true" ? 1 : 0) }, data_offset_address);
-					cout << "allocated bool: " << elem->GetText() << std::endl;
+					//cout << "allocated bool: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Int:
 					allocate_data({ (uint32_t)(std::strtoul(elem->GetText(), NULL, 0)) }, data_offset_address);
-					cout << "allocated int: " << elem->GetText() << std::endl;
+					//cout << "allocated int: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Float:
 					f = std::stof(elem->GetText());
 					allocate_data({ *reinterpret_cast<uint32_t*>(&f) }, data_offset_address);
-					cout << "allocated float: " << elem->GetText() << std::endl;
+					//cout << "allocated float: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Vector2:
 				case DataType::Vector3:
 				case DataType::Vector4:
 					vectorstring = stringstream(string(elem->GetText()));
-					cout << "vector: ";
+					//cout << "vector: ";
 					while (std::getline(vectorstring, token, ','))
 					{
-						cout << token <<" ,";
+						//cout << token <<" ,";
 						f = std::stof(token);
 						uints.push_back(*reinterpret_cast<uint32_t*>(&f));
 					}
-					cout << std::endl;
+					//cout << std::endl;
 					allocate_data(uints, data_offset_address);
 					break;
 				case DataType::String:
@@ -328,7 +328,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				default:
 					//getType(elem->Attribute("type"))
 					allocate_data({ (uint32_t)(std::strtoul(elem->GetText(), NULL, 0)) }, data_offset_address);
-					cout << "allocated unknown type "<< getType(elem->Attribute("type")) <<": " << elem->GetText() << std::endl;
+					//cout << "allocated unknown type "<< getType(elem->Attribute("type")) <<": " << elem->GetText() << std::endl;
 					break;
 				}
 				write_byte(getType(elem->Attribute("type")));
@@ -342,6 +342,9 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 
 void to_aamp(string filename)
 {
+	string_buffer.clear();
+	data_buffer.clear();
+	pointer_table.clear();
 	output = fstream(filename.substr(0,filename.size()-4) + ".aamp", ios::out | ios::binary);	//open target file for writing
 	XMLDocument xmlDoc;
 	xmlDoc.LoadFile(filename.c_str());	//open xml for reading

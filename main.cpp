@@ -68,12 +68,13 @@ int main(int argc, char* argv[])
 		cout << filename << std::endl;
 		to_xml(filename);
 	}
-	cin.get();
+	//cin.get();
 	return 0;
 }
 
 void to_xml(string filename)
 {
+	xmlDoc.Clear();
 	file = ifstream(filename, ifstream::binary);
 	if (!file.is_open())
 	{
