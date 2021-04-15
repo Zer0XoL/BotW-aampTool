@@ -9,8 +9,6 @@
 #include "crc32.h"
 #include "tinyxml2.h"
 
-using namespace std;
-
 int getType(string type)
 {
 	if (type == "bool")
@@ -36,11 +34,11 @@ int getType(string type)
 	return std::stoi(type);
 }
 
-fstream output;
+std::fstream output;
 
-map<string, vector<int>> string_buffer;	//vector holds offsets to write
-vector < pair<uint32_t, vector<int> > > data_buffer;
-map<int, vector<int>> pointer_table;	//used to restore the original structure
+std::map<string, std::vector<int>> string_buffer;	//vector holds offsets to write
+std::vector < std::pair<uint32_t, std::vector<int> > > data_buffer;
+std::map<int, std::vector<int>> pointer_table;	//used to restore the original structure
 
 void write_uint32(uint32_t data, int location = -1)
 {
@@ -105,9 +103,9 @@ void prewrite_header()
 	cout << "prewrote header.\n";
 }
 
-void allocate_data(vector<uint32_t> data, int offset_address)
+void allocate_data(std::vector<uint32_t> data, int offset_address)
 {
-	vector<uint32_t> temp;
+	std::vector<uint32_t> temp;
 	std::transform(data_buffer.begin(), data_buffer.end(), std::back_inserter(temp), 
 		[](auto pair) -> uint32_t
 		{
@@ -170,9 +168,9 @@ int write_stringbuffer()
 		write_byte(0);
 		total++;
 	}
-	for (auto thing : string_buffer)
+	for (auto& thing : string_buffer)
 	{
-		for (auto addr : thing.second)
+		for (auto& addr : thing.second)
 		{
 			write_uint16(((int)output.tellg()+4 - addr) / 4, addr);
 		}
@@ -190,9 +188,9 @@ int write_stringbuffer()
 	return total;
 }
 
-vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns collected children
+std::vector<std::pair<int, XMLElement*>> write_roots(std::vector<XMLElement*> &roots)	//returns collected children
 {
-	vector<pair<int, XMLElement*>> collected_children;
+	std::vector<std::pair<int, XMLElement*>> collected_children;
 	for (auto r : roots)
 	{
 		if (string(r->Name()) == "root_node")
@@ -226,7 +224,7 @@ vector<pair<int, XMLElement*>> write_roots(vector<XMLElement*> &roots)	//returns
 	return collected_children;
 }
 
-void write_children(vector<pair<int, XMLElement*>> nodes)
+void write_children(std::vector<std::pair<int, XMLElement*>> nodes)
 {
 	//sorts the nodes, makes the order the same as the original, but causes the data allocation order to be different:
 	/*std::sort(nodes.begin(), nodes.end(), [](auto a, auto b) {
@@ -234,8 +232,8 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 			return true;
 		return false;
 	});*/
-	vector<pair<int, XMLElement*>> collected_children;
-	for (auto n : nodes)
+	std::vector<std::pair<int, XMLElement*>> collected_children;
+	for (auto& n : nodes)
 	{
 		auto addr = n.first;
 		auto elem = n.second;
@@ -260,11 +258,11 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 		do
 		{
 			//cout << "writing child: " << string(elem->Name()) << std::endl;
-			if (string(elem->Name()) == "node")
+			if (std::string(elem->Name()) == "node")
 				write_uint32(elem->IntAttribute("hash"));
 			else	//get the crc32 hash from the name
 			{
-				string name = elem->Name();
+				std::string name = elem->Name();
 				uint32_t hash = crc32c(0, (unsigned char*)name.c_str(), name.length());
 				write_uint32(hash);
 			}
@@ -284,9 +282,9 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 			{
 				//cout << "child type: " << elem->Attribute("type") << std::endl;
 				float f;
-				stringstream vectorstring;
+				std::stringstream vectorstring;
 				string token;
-				vector<uint32_t> uints;
+				std::vector<uint32_t> uints;
 				switch (getType(elem->Attribute("type")))
 				{
 				case DataType::Bool:
@@ -305,7 +303,7 @@ void write_children(vector<pair<int, XMLElement*>> nodes)
 				case DataType::Vector2:
 				case DataType::Vector3:
 				case DataType::Vector4:
-					vectorstring = stringstream(string(elem->GetText()));
+					vectorstring = std::stringstream(string(elem->GetText()));
 					//cout << "vector: ";
 					while (std::getline(vectorstring, token, ','))
 					{
@@ -345,11 +343,11 @@ void to_aamp(string filename)
 	string_buffer.clear();
 	data_buffer.clear();
 	pointer_table.clear();
-	output = fstream(filename.substr(0,filename.size()-4) + ".aamp", ios::out | ios::binary);	//open target file for writing
+	output = std::fstream(filename.substr(0,filename.size()-4) + ".aamp", std::ios::out | std::ios::binary);	//open target file for writing
 	XMLDocument xmlDoc;
 	xmlDoc.LoadFile(filename.c_str());	//open xml for reading
 	prewrite_header();	//prewrite the header
-	vector<XMLElement*> collected_roots;
+	std::vector<XMLElement*> collected_roots;
 	XMLElement* r = xmlDoc.FirstChildElement();
 	int number_roots = 0;
 	int number_directchildren = 0;

@@ -3,13 +3,10 @@
 #include <string>
 #include <sstream>
 #include <map>
-using std::cout;
-using std::cin;
-using std::ifstream;
-using std::string;
-using std::stringstream;
+
 #include "tinyxml2.h"
 using namespace tinyxml2;
+
 #include "crc32.h"
 #include "to_aamp.h"
 
@@ -25,7 +22,7 @@ std::map<uint32_t, std::string> hashed_names;
 
 void init_crc2(std::string namesfile)
 {
-	ifstream f(namesfile);
+	std::ifstream f(namesfile);
 	if (f.is_open() == false)
 	{
 		std::cerr << "you are missing hashed_names.txt!\n";
@@ -239,8 +236,8 @@ void read_child_node(XMLElement *parent, int level)
 	file.seekg(child_address + data_offset * 4);
 	if (children == 0)
 	{
-		stringstream temp;
-		string temp_string="";
+		std::stringstream temp;
+		std::string temp_string="";
 		switch (datatype)
 		{
 		case DataType::Bool:
