@@ -26,10 +26,10 @@ void init_crc2(std::string namesfile)
 	if (f.is_open() == false)
 	{
 		std::cerr << "you are missing hashed_names.txt!\n";
-		cin.get();
+		std::cin.get();
 		exit(0);
 	}
-	string temp;
+	std::string temp;
 	while (f >> temp)
 	{
 		uint32_t result = crc32c(0, (unsigned char*)temp.c_str(), temp.length());
@@ -37,18 +37,18 @@ void init_crc2(std::string namesfile)
 	}
 }
 
-ifstream file;
+std::ifstream file;
 int rootnodes;
 int root_address;
 
 void read_root_node();
 void read_child_node(XMLElement *root, int level=0);
 
-void to_xml(string filename);
+void to_xml(std::string filename);
 
 int main(int argc, char* argv[])
 {
-	string program_path(argv[0]);
+	std::string program_path(argv[0]);
 	program_path = program_path.substr(0, program_path.length() - 12);
 
 	init_crc2(program_path+"hashed_names.txt");
@@ -61,18 +61,18 @@ int main(int argc, char* argv[])
 
 	for (int i = 1; i < argc; ++i)
 	{
-		string filename = argv[i];
-		cout << filename << std::endl;
+		std::string filename = argv[i];
+		std::cout << filename << std::endl;
 		to_xml(filename);
 	}
 	//cin.get();
 	return 0;
 }
 
-void to_xml(string filename)
+void to_xml(std::string filename)
 {
 	xmlDoc.Clear();
-	file = ifstream(filename, ifstream::binary);
+	file = std::ifstream(filename, std::ifstream::binary);
 	if (!file.is_open())
 	{
 		std::cerr << "Could not open file.\n";
@@ -82,10 +82,10 @@ void to_xml(string filename)
 	file.seekg(0, file.end);
 	int length = file.tellg();
 	file.seekg(0, file.beg);
-	cout << length << std::endl;
+	std::cout << length << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//AAMP header
-	cout << "header: " << data.chars << std::endl;
+	std::cout << "header: " << data.chars << std::endl;
 	if (data.chars[0] != 'A')
 	{
 		file.close();
@@ -96,44 +96,44 @@ void to_xml(string filename)
 	}
 
 	file.read((char*)&data.uint32, 4);	//version
-	cout << "version: " << data.uint32 << std::endl;
+	std::cout << "version: " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//unknown 3
-	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//version
-	cout << "filesize: " << data.uint32 << ", real filesize: " << length << std::endl;
+	std::cout << "filesize: " << data.uint32 << ", real filesize: " << length << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//unknown 0
-	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//XML (or other unknown format) length
-	cout << "Format name length: " << data.uint32 << std::endl;
+	std::cout << "Format name length: " << data.uint32 << std::endl;
 	int format_length = data.uint32;
 
 	file.read((char*)&data.uint32, 4);	//Number of root nodes
-	cout << "Root nodes:  " << data.uint32 << std::endl;
+	std::cout << "Root nodes:  " << data.uint32 << std::endl;
 	rootnodes = data.uint32;
 
 	file.read((char*)&data.uint32, 4);	//Number of direct child nodes to the root node
-	cout << "Children to root:  " << data.uint32 << std::endl;
+	std::cout << "Children to root:  " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//Number of nodes excluding root and root children
-	cout << "Total nodes (-root and children of root):  " << data.uint32 << std::endl;
+	std::cout << "Total nodes (-root and children of root):  " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//Data buffer size
-	cout << "Data buffer size:  " << data.uint32 << std::endl;
+	std::cout << "Data buffer size:  " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//String buffer size
-	cout << "String buffer size:  " << data.uint32 << std::endl;
+	std::cout << "String buffer size:  " << data.uint32 << std::endl;
 
 	file.read((char*)&data.uint32, 4);	//unknown 0
-	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 
 	for (int i = 0; i < format_length; ++i)
 	{
 		file.read((char*)&data.uint32, 1);
-		cout << "Format: " << data.chars << std::endl;
+		std::cout << "Format: " << data.chars << std::endl;
 	}
 
 	//ROOT NODE
@@ -141,7 +141,7 @@ void to_xml(string filename)
 	read_root_node();
 
 	file.close();
-	XMLError eResult = xmlDoc.SaveFile(string(string(filename) + ".xml").c_str());
+	XMLError eResult = xmlDoc.SaveFile(std::string(std::string(filename) + ".xml").c_str());
 	//cin.get();
 }
 
@@ -149,10 +149,10 @@ void read_root_node()
 {
 	XMLElement *newRoot = xmlDoc.NewElement("root_node");
 	
-	cout << "////ROOT NODE////" << std::endl;
+	std::cout << "////ROOT NODE////" << std::endl;
 	int address = file.tellg();
 	file.read((char*)&data.uint32, 4);	//ID
-	cout << "ID: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << "ID: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 	if (hashed_names.find(data.uint32) != hashed_names.end())
 		newRoot->SetName(hashed_names[data.uint32].c_str());
 	else
@@ -161,23 +161,23 @@ void read_root_node()
 	}
 
 	file.read((char*)&data.uint32, 4);	//unknown
-	cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << "unknown: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 	newRoot->SetAttribute("extra", data.uint32);
 
 	file.read((char*)&data.uint32, 2);	//Data offset (relative to start of node)
-	cout << "Data offset: " << (uint16_t)data.uint32 << std::dec << std::endl;
+	std::cout << "Data offset: " << (uint16_t)data.uint32 << std::dec << std::endl;
 	int data_offset = (uint16_t)data.uint32;
 
 	file.read((char*)&data.uint32, 2);	//Number of child nodes
-	cout << "Number of child nodes: " << (uint16_t)data.uint32 << std::dec << std::endl;
+	std::cout << "Number of child nodes: " << (uint16_t)data.uint32 << std::dec << std::endl;
 	int children = (uint16_t)data.uint32;
 	int here = file.tellg();
 	file.seekg(address + data_offset * 4);
-	cout << "jump_to: " << address + data_offset*4 << std::endl;
+	std::cout << "jump_to: " << address + data_offset*4 << std::endl;
 	if (children == 0)
 	{
 		newRoot->SetAttribute("pointer", address + data_offset * 4);
-		cout << "No children to root node.\n";
+		std::cout << "No children to root node.\n";
 	}
 	else
 	{
@@ -203,15 +203,15 @@ void read_child_node(XMLElement *parent, int level)
 {
 	XMLElement *newElement = xmlDoc.NewElement("node");
 	parent->InsertEndChild(newElement);
-	string lv = "\t";
+	std::string lv = "\t";
 	for (int i = 0; i < level; ++i)
 		lv += "\t";
 
-	cout <<lv<< "////CHILD NODE////" << std::endl;
+	std::cout <<lv<< "////CHILD NODE////" << std::endl;
 	int child_address = file.tellg();
 	newElement->SetAttribute("address", child_address);
 	file.read((char*)&data.uint32, 4);	//ID
-	cout << lv << "ID: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
+	std::cout << lv << "ID: " << std::hex << "0x" << data.uint32 << std::dec << std::endl;
 	if (hashed_names.find(data.uint32) != hashed_names.end())
 		newElement->SetName(hashed_names[data.uint32].c_str());
 	else
@@ -220,11 +220,11 @@ void read_child_node(XMLElement *parent, int level)
 	}
 
 	file.read((char*)&data.uint32, 2);	//Data offset
-	cout << lv << "Data offset: " << (uint16_t)data.uint32 << std::endl;
+	std::cout << lv << "Data offset: " << (uint16_t)data.uint32 << std::endl;
 	int data_offset = (uint16_t)data.uint32;
 
 	file.read((char*)&data.uint32, 1);	//Number of child nodes
-	cout << lv << "Child node count: " << (unsigned short)data.uint32 << std::endl;
+	std::cout << lv << "Child node count: " << (unsigned short)data.uint32 << std::endl;
 	int children = (uint8_t)data.uint32;
 
 	uint8_t datatype;

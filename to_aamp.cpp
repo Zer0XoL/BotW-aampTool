@@ -9,7 +9,7 @@
 #include "crc32.h"
 #include "tinyxml2.h"
 
-int getType(string type)
+int getType(std::string type)
 {
 	if (type == "bool")
 		return 0x0;
@@ -36,7 +36,7 @@ int getType(string type)
 
 std::fstream output;
 
-std::map<string, std::vector<int>> string_buffer;	//vector holds offsets to write
+std::map<std::string, std::vector<int>> string_buffer;	//vector holds offsets to write
 std::vector < std::pair<uint32_t, std::vector<int> > > data_buffer;
 std::map<int, std::vector<int>> pointer_table;	//used to restore the original structure
 
@@ -70,7 +70,7 @@ void write_byte(uint8_t data, int location = -1)
 		output.seekg(current);
 }
 
-void write_string(string data, int location = -1)
+void write_string(std::string data, int location = -1)
 {
 	int current = output.tellg();
 	if (location != -1)
@@ -100,7 +100,7 @@ void prewrite_header()
 	write_uint32(0);	//unknown 0 padding	//44
 	write_string("xml");//format
 	write_byte(0);		//format 0 terminal
-	cout << "prewrote header.\n";
+	std::cout << "prewrote header.\n";
 }
 
 void allocate_data(std::vector<uint32_t> data, int offset_address)
@@ -148,7 +148,7 @@ int write_databuffer()
 	return total;
 }
 
-void allocate_string(string data, int offset_address)
+void allocate_string(std::string data, int offset_address)
 {
 	if (string_buffer.find(data) == string_buffer.end())	//not in map yet
 	{
@@ -193,11 +193,11 @@ std::vector<std::pair<int, XMLElement*>> write_roots(std::vector<XMLElement*> &r
 	std::vector<std::pair<int, XMLElement*>> collected_children;
 	for (auto r : roots)
 	{
-		if (string(r->Name()) == "root_node")
+		if (std::string(r->Name()) == "root_node")
 			write_uint32(r->IntAttribute("hash"));
 		else	//get the crc32 hash from the name
 		{
-			string name = r->Name();
+			std::string name = r->Name();
 			uint32_t hash = crc32c(0, (unsigned char*)name.c_str(), name.length());
 			write_uint32(hash);
 		}
@@ -283,12 +283,12 @@ void write_children(std::vector<std::pair<int, XMLElement*>> nodes)
 				//cout << "child type: " << elem->Attribute("type") << std::endl;
 				float f;
 				std::stringstream vectorstring;
-				string token;
+				std::string token;
 				std::vector<uint32_t> uints;
 				switch (getType(elem->Attribute("type")))
 				{
 				case DataType::Bool:
-					allocate_data({ (uint32_t)(string(elem->GetText()) == "true" ? 1 : 0) }, data_offset_address);
+					allocate_data({ (uint32_t)(std::string(elem->GetText()) == "true" ? 1 : 0) }, data_offset_address);
 					//cout << "allocated bool: " << elem->GetText() << std::endl;
 					break;
 				case DataType::Int:
@@ -303,7 +303,7 @@ void write_children(std::vector<std::pair<int, XMLElement*>> nodes)
 				case DataType::Vector2:
 				case DataType::Vector3:
 				case DataType::Vector4:
-					vectorstring = std::stringstream(string(elem->GetText()));
+					vectorstring = std::stringstream(std::string(elem->GetText()));
 					//cout << "vector: ";
 					while (std::getline(vectorstring, token, ','))
 					{
@@ -338,7 +338,7 @@ void write_children(std::vector<std::pair<int, XMLElement*>> nodes)
 		write_children(collected_children);
 }
 
-void to_aamp(string filename)
+void to_aamp(std::string filename)
 {
 	string_buffer.clear();
 	data_buffer.clear();

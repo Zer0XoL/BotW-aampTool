@@ -1,14 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using std::cout;
-using std::cin;
-using std::ifstream;
-using std::string;
+
 #include "tinyxml2.h"
 using namespace tinyxml2;
 
-void to_aamp(string filename);
+void to_aamp(std::string filename);
 
 enum DataType
 {
@@ -24,4 +21,4 @@ enum DataType
 	Path = 0xF
 };
 
-int getType(string type);
+int getType(std::string type);
